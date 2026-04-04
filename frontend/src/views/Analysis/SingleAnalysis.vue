@@ -826,6 +826,65 @@ const depthOptions = [
   { icon: '🏆', name: '5级 - 全面分析', description: '最全面的分析报告', time: '8-16分钟' }
 ]
 
+// 策略预设
+const activePreset = ref<string>('')
+const strategyPresets = [
+  {
+    id: 'conservative',
+    icon: '🛡️',
+    name: '稳健型',
+    desc: '重风险、基本面',
+    config: {
+      researchDepth: 3,
+      selectedAnalysts: ['fundamental_analyst', 'risk_analyst'],
+      enableTechnicalAnalysis: false
+    }
+  },
+  {
+    id: 'balanced',
+    icon: '⚖️',
+    name: '均衡型',
+    desc: '技术+基本面',
+    config: {
+      researchDepth: 3,
+      selectedAnalysts: ['technical_analyst', 'fundamental_analyst'],
+      enableTechnicalAnalysis: true
+    }
+  },
+  {
+    id: 'aggressive',
+    icon: '🚀',
+    name: '进取型',
+    desc: '技术+情绪',
+    config: {
+      researchDepth: 2,
+      selectedAnalysts: ['technical_analyst', 'sentiment_analyst'],
+      enableTechnicalAnalysis: true
+    }
+  },
+  {
+    id: 'comprehensive',
+    icon: '🔬',
+    name: '全面型',
+    desc: '所有分析师',
+    config: {
+      researchDepth: 4,
+      selectedAnalysts: ['technical_analyst', 'fundamental_analyst', 'sentiment_analyst', 'risk_analyst'],
+      enableTechnicalAnalysis: true
+    }
+  }
+]
+
+// 应用策略预设
+const applyPreset = (presetId: string) => {
+  activePreset.value = presetId
+  const preset = strategyPresets.find(p => p.id === presetId)
+  if (preset) {
+    Object.assign(analysisForm, preset.config)
+    ElMessage.success(`已应用「${preset.name}」策略配置`)
+  }
+}
+
 // 禁用日期
 const disabledDate = (time: Date) => {
   return time.getTime() > Date.now()
