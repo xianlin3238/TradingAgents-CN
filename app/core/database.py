@@ -188,27 +188,42 @@ db_manager = DatabaseManager()
 
 async def init_database():
     """初始化数据库连接"""
+    import os
     global mongo_client, mongo_db, redis_client, redis_pool
 
+    mongodb_enabled = os.getenv('MONGODB_ENABLED', 'true').lower() == 'true'
+    redis_enabled = os.getenv('REDIS_ENABLED', 'true').lower() == 'true'
+
     try:
-        # 初始化MongoDB
-        await db_manager.init_mongodb()
-        mongo_client = db_manager.mongo_client
-        mongo_db = db_manager.mongo_db
+        if mongodb_enabled:
+            # 初始化MongoDB
+            await db_manager.init_mongodb()
+            mongo_client = db_manager.mongo_client
+            mongo_db = db_manager.mongo_db
+            logger.info("✅ MongoDB连接初始化完成")
+        else:
+            logger.info("⏭️  MongoDB已禁用 (MONGODB_ENABLED=false)")
 
-        # 初始化Redis
-        await db_manager.init_redis()
-        redis_client = db_manager.redis_client
-        redis_pool = db_manager.redis_pool
+        if redis_enabled:
+            # 初始化Redis
+            await db_manager.init_redis()
+            redis_client = db_manager.redis_client
+            redis_pool = db_manager.redis_pool
+            logger.info("✅ Redis连接初始化完成")
+        else:
+            logger.info("⏭️  Redis已禁用 (REDIS_ENABLED=false)")
 
-        logger.info("🎉 所有数据库连接初始化完成")
+        if mongodb_enabled:
+            # 🔥 初始化数据库视图和索引（仅在MongoDB启用时）
+            await init_database_views_and_indexes()
 
-        # 🔥 初始化数据库视图和索引
-        await init_database_views_and_indexes()
+        logger.info("🎉 数据库连接初始化完成")
 
     except Exception as e:
-        logger.error(f"💥 数据库初始化失败: {e}")
-        raise
+        logger.warning(f"⚠️  部分数据库初始化失败: {e}")
+        # 即使部分数据库初始化失败，也继续运行应用
+        if not mongodb_enabled and not redis_enabled:
+            logger.info("ℹ️  所有数据库均已禁用，应用将以文件模式运行")
 
 
 async def init_database_views_and_indexes():

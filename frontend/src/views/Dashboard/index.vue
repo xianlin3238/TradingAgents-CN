@@ -291,6 +291,9 @@
           </div>
         </el-card>
 
+        <!-- 交易统计 -->
+        <TradingStatsCard style="margin-top: 24px;" />
+
         <!-- 多数据源同步 -->
         <MultiSourceSyncCard style="margin-top: 24px;" />
       </el-col>
@@ -315,6 +318,7 @@ import {
 import { ElMessage } from 'element-plus'
 import type { AnalysisTask, AnalysisStatus } from '@/types/analysis'
 import MultiSourceSyncCard from '@/components/Dashboard/MultiSourceSyncCard.vue'
+import TradingStatsCard from './components/TradingStatsCard.vue'
 import { favoritesApi } from '@/api/favorites'
 import { analysisApi } from '@/api/analysis'
 import { newsApi } from '@/api/news'
@@ -622,100 +626,131 @@ onMounted(async () => {
 </script>
 
 <style lang="scss" scoped>
+@import '@/styles/variables.scss';
+
 .dashboard {
+  // 欢迎区域 - 金融级渐变背景
   .welcome-section {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    border-radius: 12px;
-    padding: 40px;
-    color: white;
-    margin-bottom: 24px;
+    background: linear-gradient(135deg, $color-primary-600 0%, $color-primary-800 100%);
+    border-radius: $card-radius;
+    padding: $spacing-8;
+    color: $text-primary-inverse;
+    margin-bottom: $spacing-6;
     display: flex;
     justify-content: space-between;
     align-items: center;
+    box-shadow: $shadow-lg;
+    position: relative;
+    overflow: hidden;
+
+    // 背景装饰
+ &::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      right: -10%;
+      width: 300px;
+      height: 300px;
+      background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+      border-radius: 50%;
+    }
 
     .welcome-content {
+      position: relative;
+      z-index: 1;
+
       .welcome-title {
-        font-size: 32px;
-        font-weight: 600;
-        margin: 0 0 12px 0;
+        font-size: $font-size-3xl;
+        font-weight: $font-weight-bold;
+        margin: 0 0 $spacing-3 0;
         display: flex;
         align-items: center;
-        gap: 16px;
+        gap: $spacing-4;
 
         .version-badge {
           background: rgba(255, 255, 255, 0.2);
-          padding: 4px 12px;
-          border-radius: 20px;
-          font-size: 14px;
-          font-weight: 400;
+          padding: $spacing-1 $spacing-3;
+          border-radius: $radius-full;
+          font-size: $font-size-sm;
+          font-weight: $font-weight-normal;
         }
       }
 
       .welcome-subtitle {
-        font-size: 16px;
+        font-size: $font-size-lg;
         opacity: 0.9;
         margin: 0;
+        line-height: $line-height-relaxed;
       }
     }
 
     .welcome-actions {
       display: flex;
-      gap: 16px;
+      gap: $spacing-4;
+      position: relative;
+      z-index: 1;
     }
   }
 
+  // 学习中心推荐卡片
   .learning-highlight-card {
-    margin-bottom: 24px;
-    border: 2px solid var(--el-color-primary);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+    margin-bottom: $spacing-6;
+    border: 2px solid $color-primary-500;
+    box-shadow: $shadow-card-hover;
+    transition: box-shadow $transition-normal;
+
+    &:hover {
+      box-shadow: $shadow-lg;
+    }
 
     .learning-highlight {
       display: flex;
       align-items: center;
-      gap: 24px;
-      padding: 8px;
+      gap: $spacing-6;
+      padding: $spacing-2;
 
       .learning-icon {
         flex-shrink: 0;
         width: 80px;
         height: 80px;
-        border-radius: 12px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: $card-radius;
+        background: linear-gradient(135deg, $color-primary-500 0%, $color-primary-700 100%);
         display: flex;
         align-items: center;
         justify-content: center;
-        color: white;
+        color: $text-primary-inverse;
+        box-shadow: $shadow-md;
       }
 
       .learning-content {
         flex: 1;
 
         h2 {
-          font-size: 20px;
-          font-weight: 600;
-          margin: 0 0 12px 0;
-          color: var(--el-text-color-primary);
+          font-size: $font-size-xl;
+          font-weight: $font-weight-semibold;
+          margin: 0 0 $spacing-3 0;
+          color: $text-primary;
         }
 
         p {
-          font-size: 14px;
-          color: var(--el-text-color-regular);
-          line-height: 1.6;
-          margin: 0 0 16px 0;
+          font-size: $font-size-base;
+          color: $text-secondary;
+          line-height: $line-height-relaxed;
+          margin: 0 0 $spacing-4 0;
         }
 
         .learning-features {
           display: flex;
           flex-wrap: wrap;
-          gap: 8px;
+          gap: $spacing-2;
 
           .feature-tag {
-            padding: 4px 12px;
-            background: var(--el-color-primary-light-9);
-            color: var(--el-color-primary);
-            border-radius: 16px;
-            font-size: 13px;
-            font-weight: 500;
+            padding: $spacing-1 $spacing-3;
+            background: $color-primary-900;
+            color: $color-primary-400;
+            border-radius: $radius-full;
+            font-size: $font-size-sm;
+            font-weight: $font-weight-medium;
           }
         }
       }
@@ -726,58 +761,60 @@ onMounted(async () => {
     }
   }
 
+  // 快速操作卡片
   .quick-actions-card {
     .quick-actions {
       display: grid;
-      gap: 16px;
+      gap: $spacing-4;
 
       .action-item {
         display: flex;
         align-items: center;
-        gap: 16px;
-        padding: 20px;
-        border: 1px solid var(--el-border-color-lighter);
-        border-radius: 8px;
+        gap: $spacing-4;
+        padding: $spacing-5;
+        border: 1px solid $border-default;
+        border-radius: $radius-lg;
         cursor: pointer;
-        transition: all 0.3s ease;
+        transition: all $transition-fast;
 
         &:hover {
-          border-color: var(--el-color-primary);
-          background-color: var(--el-color-primary-light-9);
+          border-color: $color-primary-500;
+          background-color: $bg-elevated;
+          box-shadow: $shadow-md;
         }
 
         .action-icon {
           width: 40px;
           height: 40px;
-          border-radius: 8px;
-          background: var(--el-color-primary-light-8);
+          border-radius: $radius-md;
+          background: $color-primary-900;
           display: flex;
           align-items: center;
           justify-content: center;
-          color: var(--el-color-primary);
-          font-size: 20px;
+          color: $color-primary-400;
+          font-size: $font-size-xl;
         }
 
         .action-content {
           flex: 1;
 
           h3 {
-            margin: 0 0 4px 0;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--el-text-color-primary);
+            margin: 0 0 $spacing-1 0;
+            font-size: $font-size-lg;
+            font-weight: $font-weight-semibold;
+            color: $text-primary;
           }
 
           p {
             margin: 0;
-            font-size: 14px;
-            color: var(--el-text-color-regular);
+            font-size: $font-size-base;
+            color: $text-secondary;
           }
         }
 
         .action-arrow {
-          color: var(--el-text-color-placeholder);
-          transition: transform 0.3s ease;
+          color: $text-disabled;
+          transition: transform $transition-fast;
         }
 
         &:hover .action-arrow {
@@ -869,6 +906,7 @@ onMounted(async () => {
     }
   }
 
+  // 自选股卡片
   .favorites-card {
     .card-header {
       display: flex;
@@ -878,7 +916,8 @@ onMounted(async () => {
 
     .empty-favorites {
       text-align: center;
-      padding: 20px 0;
+      padding: $spacing-5 0;
+      color: $text-secondary;
     }
 
     .favorites-list {
@@ -886,16 +925,16 @@ onMounted(async () => {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        padding: 12px 0;
-        border-bottom: 1px solid var(--el-border-color-lighter);
+        padding: $spacing-3 0;
+        border-bottom: 1px solid $border-light;
         cursor: pointer;
-        transition: background-color 0.3s ease;
+        transition: all $transition-fast;
 
         &:hover {
-          background-color: var(--el-fill-color-lighter);
-          margin: 0 -16px;
-          padding: 12px 16px;
-          border-radius: 6px;
+          background-color: $bg-surface;
+          margin: 0 (-$spacing-4);
+          padding: $spacing-3 $spacing-4;
+          border-radius: $radius-md;
         }
 
         &:last-child {
@@ -904,15 +943,15 @@ onMounted(async () => {
 
         .stock-info {
           .stock-code {
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--el-text-color-primary);
+            font-weight: $font-weight-semibold;
+            font-size: $font-size-base;
+            color: $text-primary;
           }
 
           .stock-name {
-            font-size: 12px;
-            color: var(--el-text-color-regular);
-            margin-top: 2px;
+            font-size: $font-size-xs;
+            color: $text-secondary;
+            margin-top: $spacing-1;
           }
         }
 
@@ -920,25 +959,25 @@ onMounted(async () => {
           text-align: right;
 
           .current-price {
-            font-weight: 600;
-            font-size: 14px;
-            color: var(--el-text-color-primary);
+            font-weight: $font-weight-semibold;
+            font-size: $font-size-base;
+            color: $text-primary;
           }
 
           .change-percent {
-            font-size: 12px;
-            margin-top: 2px;
+            font-size: $font-size-xs;
+            margin-top: $spacing-1;
 
             &.price-up {
-              color: #f56c6c;
+              color: $color-up;
             }
 
             &.price-down {
-              color: #67c23a;
+              color: $color-down;
             }
 
             &.price-neutral {
-              color: var(--el-text-color-regular);
+              color: $text-secondary;
             }
           }
         }
@@ -947,9 +986,9 @@ onMounted(async () => {
 
     .favorites-footer {
       text-align: center;
-      padding-top: 12px;
-      border-top: 1px solid var(--el-border-color-lighter);
-      margin-top: 12px;
+      padding-top: $spacing-3;
+      border-top: 1px solid $border-light;
+      margin-top: $spacing-3;
     }
   }
 

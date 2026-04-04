@@ -125,6 +125,23 @@
           </div>
         </el-card>
 
+        <!-- 技术指标图表 -->
+        <el-card shadow="hover" class="indicator-card">
+          <template #header>
+            <div class="card-hd">
+              <div>技术指标</div>
+              <el-segmented v-model="activeIndicator" :options="indicatorOptions" size="small" />
+            </div>
+          </template>
+          <div v-if="indicatorLoading" class="indicator-loading">
+            <el-skeleton :rows="4" animated />
+          </div>
+          <div v-else-if="indicatorData.length === 0" class="indicator-empty">
+            <el-empty description="暂无指标数据" :image-size="80" />
+          </div>
+          <v-chart v-else class="indicator-chart" :option="indicatorOption" autoresize />
+        </el-card>
+
         <!-- 详细分析结果（方案B）：仅在进行中或有结果时显示 -->
         <el-card v-if="analysisStatus==='running' || lastAnalysis" shadow="hover" class="analysis-detail-card" id="analysis-detail">
           <template #header><div class="card-hd">详细分析结果</div></template>
@@ -745,6 +762,12 @@ onUnmounted(() => { if (timer) clearInterval(timer) })
 const periodOptions = ['日K','周K','月K']
 const period = ref('日K')
 
+// 技术指标相关
+const indicatorOptions = ['MACD', 'RSI', 'KDJ']
+const activeIndicator = ref('MACD')
+const indicatorLoading = ref(false)
+const indicatorData = ref<any[]>([])
+
 const klineSource = ref<string | undefined>(undefined)
 
 function periodLabelToParam(p: string): string {
@@ -808,6 +831,224 @@ async function fetchKline() {
     console.error('获取K线失败', e)
   }
 }
+
+// 计算技术指标
+import { getMACDChartData, getRSIChartData, getKDJChartData, type KlineBar } from '@/utils/indicators'
+
+function calculateIndicator() {
+  if (!kOption.value?.xAxis?.data || !kOption.value?.series?.[0]?.data) {
+    indicatorData.value = []
+    return
+  }
+  
+  const times = kOption.value.xAxis.data as string[]
+  const values = kOption.value.series[0].data as number[][]
+  
+  if (times.length === 0 || values.length === 0) {
+    indicatorData.value = []
+    return
+  }
+  
+  // 转换为 KlineBar 格式
+  const klines: KlineBar[] = times.map((time, i) => ({
+    time,
+    open: values[i]?.[0],
+    close: values[i]?.[1],
+    low: values[i]?.[2],
+    high: values[i]?.[3]
+  }))
+  
+  indicatorLoading.value = true
+  
+  try {
+    switch (activeIndicator.value) {
+      case 'MACD':
+        indicatorData.value = getMACDChartData(klines)
+        break
+      case 'RSI':
+        indicatorData.value = getRSIChartData(klines, 14)
+        break
+      case 'KDJ':
+        indicatorData.value = getKDJChartData(klines)
+        break
+      default:
+        indicatorData.value = []
+    }
+  } catch (e) {
+    console.error('计算指标失败', e)
+    indicatorData.value = []
+  }
+  
+  indicatorLoading.value = false
+}
+
+// 监听 K 线数据和指标切换
+watch([() => kOption.value?.series?.[0]?.data, activeIndicator], () => {
+  calculateIndicator()
+}, { deep: true })
+
+// 技术指标图表配置
+const indicatorOption = computed(() => {
+  if (indicatorData.value.length === 0) return {}
+  
+  const times = indicatorData.value.map(d => d.time)
+  
+  if (activeIndicator.value === 'MACD') {
+    const data = indicatorData.value as Array<{ time: string; dif: number; dea: number; macd: number }>
+    return {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'cross' }
+      },
+      legend: {
+        data: ['DIF', 'DEA', 'MACD'],
+        top: 10
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: times,
+        boundaryGap: false
+      },
+      yAxis: {
+        type: 'value',
+        splitLine: { lineStyle: { type: 'dashed' } }
+      },
+      series: [
+        {
+          name: 'DIF',
+          type: 'line',
+          data: data.map(d => d.dif),
+          lineStyle: { width: 1 },
+          itemStyle: { color: '#f59e0b' }
+        },
+        {
+          name: 'DEA',
+          type: 'line',
+          data: data.map(d => d.dea),
+          lineStyle: { width: 1 },
+          itemStyle: { color: '#3b82f6' }
+        },
+        {
+          name: 'MACD',
+          type: 'bar',
+          data: data.map(d => d.macd),
+          itemStyle: {
+            color: (params: any) => params.value >= 0 ? '#ef4444' : '#16a34a'
+          }
+        }
+      ]
+    }
+  }
+  
+  if (activeIndicator.value === 'RSI') {
+    const data = indicatorData.value as Array<{ time: string; rsi: number }>
+    return {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'cross' }
+      },
+      legend: {
+        data: ['RSI'],
+        top: 10
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: times,
+        boundaryGap: false
+      },
+      yAxis: {
+        type: 'value',
+        min: 0,
+        max: 100,
+        splitLine: { lineStyle: { type: 'dashed' } }
+      },
+      series: [
+        {
+          name: 'RSI',
+          type: 'line',
+          data: data.map(d => d.rsi),
+          lineStyle: { width: 1.5 },
+          itemStyle: { color: '#8b5cf6' },
+          markLine: {
+            silent: true,
+            lineStyle: { type: 'dashed', color: '#6b7280' },
+            data: [
+              { yAxis: 70, label: { formatter: '超买' } },
+              { yAxis: 30, label: { formatter: '超卖' } },
+              { yAxis: 50, lineStyle: { type: 'solid', color: '#9ca3af' } }
+            ]
+          }
+        }
+      ]
+    }
+  }
+  
+  if (activeIndicator.value === 'KDJ') {
+    const data = indicatorData.value as Array<{ time: string; k: number; d: number; j: number }>
+    return {
+      tooltip: {
+        trigger: 'axis',
+        axisPointer: { type: 'cross' }
+      },
+      legend: {
+        data: ['K', 'D', 'J'],
+        top: 10
+      },
+      grid: {
+        left: '3%',
+        right: '4%',
+        bottom: '3%',
+        containLabel: true
+      },
+      xAxis: {
+        type: 'category',
+        data: times,
+        boundaryGap: false
+      },
+      yAxis: {
+        type: 'value',
+        splitLine: { lineStyle: { type: 'dashed' } }
+      },
+      series: [
+        {
+          name: 'K',
+          type: 'line',
+          data: data.map(d => d.k),
+          lineStyle: { width: 1 },
+          itemStyle: { color: '#f59e0b' }
+        },
+        {
+          name: 'D',
+          type: 'line',
+          data: data.map(d => d.d),
+          lineStyle: { width: 1 },
+          itemStyle: { color: '#3b82f6' }
+        },
+        {
+          name: 'J',
+          type: 'line',
+          data: data.map(d => d.j),
+          lineStyle: { width: 1 },
+          itemStyle: { color: '#ef4444' }
+        }
+      ]
+    }
+  }
+  
+  return {}
+})
 
 
 // 新闻
@@ -1501,5 +1742,55 @@ function exportReport() {
   align-items: center;
   gap: 4px;
   flex-wrap: wrap;
+}
+
+/* 技术指标卡片样式 */
+.indicator-card {
+  margin-top: 16px;
+
+  .card-hd {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+  }
+
+  .indicator-loading,
+  .indicator-empty {
+    padding: 20px 0;
+  }
+
+  .indicator-chart {
+    height: 250px;
+  }
+}
+</style>
+
+<style lang="scss" scoped>
+@import '@/styles/variables.scss';
+
+.chart-card {
+  margin-top: 24px;
+
+  .card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-weight: $font-weight-semibold;
+  }
+
+  .chart-tabs {
+    :deep(.el-tabs__header) {
+      margin-bottom: $spacing-4;
+    }
+
+    :deep(.el-tabs__item) {
+      font-size: $font-size-sm;
+
+      &.is-active {
+        font-weight: $font-weight-semibold;
+      }
+    }
+  }
 }
 </style>

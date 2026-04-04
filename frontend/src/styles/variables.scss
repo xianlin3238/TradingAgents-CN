@@ -1,40 +1,198 @@
-// SCSS变量定义
+// ============================================================
+// TradingAgents Design System Variables
+// 金融级暗黑主题设计规范
+// ============================================================
 
-// 颜色变量
-$primary-color: #409EFF;
-$success-color: #67C23A;
-$warning-color: #E6A23C;
-$danger-color: #F56C6C;
-$info-color: #909399;
+// ------------------------------------------------------------
+// 颜色系统 / Color System
+// ------------------------------------------------------------
 
-// 间距变量
-$spacing-xs: 4px;
-$spacing-sm: 8px;
-$spacing-md: 16px;
-$spacing-lg: 24px;
-$spacing-xl: 32px;
+// 主色调 - 专业蓝色系
+$color-primary-600: #2563EB;      // 主色
+$color-primary-500: #3B82F6;      // 主色亮
+$color-primary-400: #60A5FA;      // 主色更亮
+$color-primary-300: #93C5FD;      // 主色最亮
+$color-primary-700: #1D4ED8;      // 主色深
+$color-primary-800: #1E40AF;      // 主色更深
+$color-primary-900: #1E3A8A;      // 主色最深
+
+// 涨跌颜色 - 符合中国股市习惯
+$color-up: #10B981;               // 涨 - 绿色
+$color-up-light: #34D399;
+$color-up-dark: #059669;
+$color-down: #EF4444;             // 跌 - 红色
+$color-down-light: #F87171;
+$color-down-dark: #DC2626;
+
+// 背景层次
+$bg-base: #0F172A;                // 最深背景
+$bg-elevated: #1E293B;            // 卡片背景
+$bg-surface: #334155;             // 悬浮背景
+$bg-overlay: #475569;             // 遮罩背景
+
+// 文字层次
+$text-primary: #F1F5F9;           // 主文字
+$text-secondary: #94A3B8;         // 次文字
+$text-disabled: #64748B;          // 禁用文字
+$text-placeholder: #475569;       // 占位符
+
+// 边框颜色
+$border-default: #334155;
+$border-light: #1E293B;
+$border-lighter: #1E293B;
+
+// 状态颜色
+$color-success: #10B981;
+$color-warning: #F59E0B;
+$color-danger: #EF4444;
+$color-info: #3B82F6;
+
+// 图表专用颜色
+$chart-colors: (
+  primary: #3B82F6,
+  success: #10B981,
+  warning: #F59E0B,
+  danger: #EF4444,
+  info: #06B6D4,
+  purple: #8B5CF6,
+  pink: #EC4899,
+  orange: #F97316,
+  teal: #14B8A6,
+  indigo: #6366F1
+);
+
+// ------------------------------------------------------------
+// 间距系统 / Spacing System
+// ------------------------------------------------------------
+
+$spacing-0: 0;
+$spacing-1: 4px;
+$spacing-2: 8px;
+$spacing-3: 12px;
+$spacing-4: 16px;
+$spacing-5: 24px;
+$spacing-6: 32px;
+$spacing-7: 40px;
+$spacing-8: 48px;
+
+// ------------------------------------------------------------
+// 字体系统 / Typography System
+// ------------------------------------------------------------
 
 // 字体大小
 $font-size-xs: 12px;
 $font-size-sm: 14px;
-$font-size-md: 16px;
+$font-size-base: 16px;
 $font-size-lg: 18px;
 $font-size-xl: 20px;
+$font-size-2xl: 24px;
+$font-size-3xl: 32px;
+$font-size-4xl: 40px;
 
-// 边框圆角
-$border-radius-sm: 4px;
-$border-radius-md: 6px;
-$border-radius-lg: 8px;
-$border-radius-xl: 12px;
+// 行高
+$line-height-tight: 1.25;         // 标题
+$line-height-normal: 1.5;         // 正文
+$line-height-relaxed: 1.75;       // 宽松
 
-// 阴影
-$box-shadow-light: 0 2px 4px rgba(0, 0, 0, 0.1);
-$box-shadow-medium: 0 4px 8px rgba(0, 0, 0, 0.15);
-$box-shadow-heavy: 0 8px 16px rgba(0, 0, 0, 0.2);
+// 字重
+$font-weight-normal: 400;
+$font-weight-medium: 500;
+$font-weight-semibold: 600;
+$font-weight-bold: 700;
 
-// 断点
+// ------------------------------------------------------------
+// 圆角系统 / Border Radius
+// ------------------------------------------------------------
+
+$radius-sm: 4px;
+$radius-md: 8px;
+$radius-lg: 12px;
+$radius-xl: 16px;
+$radius-full: 9999px;
+
+// ------------------------------------------------------------
+// 阴影系统 / Shadow System
+// ------------------------------------------------------------
+
+// 卡片阴影
+$shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+$shadow-card-hover: 0 10px 40px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+
+// 悬浮阴影
+$shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.4);
+$shadow-popover: 0 8px 32px rgba(0, 0, 0, 0.5);
+
+// 强调阴影
+$shadow-glow-primary: 0 0 20px rgba(59, 130, 246, 0.3);
+$shadow-glow-success: 0 0 20px rgba(16, 185, 129, 0.3);
+$shadow-glow-danger: 0 0 20px rgba(239, 68, 68, 0.3);
+
+// ------------------------------------------------------------
+// 过渡系统 / Transition System
+// ------------------------------------------------------------
+
+$transition-fast: 150ms ease;
+$transition-normal: 250ms ease;
+$transition-slow: 350ms ease;
+
+// 贝塞尔曲线
+$ease-in-out-quart: cubic-bezier(0.76, 0, 0.24, 1);
+$ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+$ease-in-out-back: cubic-bezier(0.68, -0.6, 0.32, 1.6);
+
+// ------------------------------------------------------------
+// 断点系统 / Breakpoints
+// ------------------------------------------------------------
+
 $breakpoint-xs: 480px;
-$breakpoint-sm: 768px;
-$breakpoint-md: 992px;
-$breakpoint-lg: 1200px;
-$breakpoint-xl: 1920px;
+$breakpoint-sm: 640px;
+$breakpoint-md: 768px;
+$breakpoint-lg: 1024px;
+$breakpoint-xl: 1280px;
+$breakpoint-2xl: 1536px;
+
+// ------------------------------------------------------------
+// Z-Index 系统
+// ------------------------------------------------------------
+
+$z-index-dropdown: 1000;
+$z-index-sticky: 1020;
+$z-index-fixed: 1030;
+$z-index-modal-backdrop: 1040;
+$z-index-modal: 1050;
+$z-index-popover: 1060;
+$z-index-tooltip: 1070;
+
+// ------------------------------------------------------------
+// 组件变量 / Component Variables
+// ------------------------------------------------------------
+
+// 卡片
+$card-bg: $bg-elevated;
+$card-border: $border-default;
+$card-radius: $radius-lg;
+$card-padding: $spacing-5;
+$card-shadow: $shadow-card;
+
+// 按钮
+$btn-height-sm: 32px;
+$btn-height-md: 40px;
+$btn-height-lg: 48px;
+$btn-padding-sm: $spacing-2 $spacing-3;
+$btn-padding-md: $spacing-2 $spacing-4;
+$btn-padding-lg: $spacing-3 $spacing-5;
+$btn-radius: $radius-md;
+
+// 输入框
+$input-height: 40px;
+$input-padding: $spacing-2 $spacing-3;
+$input-radius: $radius-md;
+$input-bg: $bg-surface;
+$input-border: $border-default;
+
+// 侧边栏
+$sidebar-width: 240px;
+$sidebar-collapsed-width: 64px;
+
+// 头部
+$header-height: 60px;
