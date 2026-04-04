@@ -406,7 +406,50 @@ const deleteReport = async (report: any) => {
 }
 
 const exportSelected = () => {
-  ElMessage.info('批量导出功能开发中...')
+  if (selectedReports.value.length === 0) {
+    ElMessage.warning('请先选择要导出的报告')
+    return
+  }
+  
+  // 生成汇总 Markdown
+  const lines = [
+    `# 分析报告汇总`,
+    '',
+    `**导出时间**: ${new Date().toLocaleString('zh-CN')}`,
+    `**报告数量**: ${selectedReports.value.length}`,
+    '',
+    '---',
+    ''
+  ]
+  
+  selectedReports.value.forEach((report, index) => {
+    lines.push(`## ${index + 1}. ${report.title || report.stock_code}`)
+    lines.push('')
+    lines.push(`- **股票**: ${report.stock_code} ${report.stock_name || ''}`)
+    lines.push(`- **类型**: ${getTypeText(report.type)}`)
+    lines.push(`- **状态**: ${getStatusText(report.status)}`)
+    lines.push(`- **创建时间**: ${new Date(report.created_at).toLocaleString('zh-CN')}`)
+    lines.push('')
+    
+    if (report.content) {
+      lines.push('### 分析内容')
+      lines.push('')
+      lines.push(report.content)
+      lines.push('')
+    }
+    lines.push('---', '')
+  })
+  
+  const md = lines.join('\n')
+  const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' })
+  const url = URL.createObjectURL(blob)
+  const link = document.createElement('a')
+  link.href = url
+  link.download = `reports-${new Date().toISOString().slice(0, 10)}.md`
+  link.click()
+  URL.revokeObjectURL(url)
+  
+  ElMessage.success(`已导出 ${selectedReports.value.length} 份报告`)
 }
 
 const refreshReports = () => {

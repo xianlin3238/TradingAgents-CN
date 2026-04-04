@@ -65,6 +65,9 @@
       <el-row :gutter="16" align="middle">
         <el-col :span="24">
           <div class="action-buttons">
+            <el-checkbox v-model="autoRefresh" @change="toggleAutoRefresh" style="margin-right: 16px;">
+              自动刷新 (30s)
+            </el-checkbox>
             <el-button @click="refreshData">
               <el-icon><Refresh /></el-icon>
               刷新
@@ -499,7 +502,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useRouter } from 'vue-router'
 import {
@@ -851,9 +854,27 @@ const deleteTag = async (row: any) => {
 
 
 
+const autoRefresh = ref(false)
+let refreshTimer: ReturnType<typeof setInterval> | null = null
+
 const refreshData = () => {
   loadFavorites()
   loadUserTags()
+}
+
+// 切换自动刷新
+const toggleAutoRefresh = (val: boolean) => {
+  if (val) {
+    refreshData() // 立即刷新一次
+    refreshTimer = setInterval(() => {
+      refreshData()
+    }, 30000) // 每30秒刷新
+  } else {
+    if (refreshTimer) {
+      clearInterval(refreshTimer)
+      refreshTimer = null
+    }
+  }
 }
 
 const showAddDialog = () => {
@@ -1190,6 +1211,13 @@ onMounted(() => {
   if (auth.isAuthenticated) {
     loadFavorites()
     loadUserTags()
+  }
+})
+
+onUnmounted(() => {
+  if (refreshTimer) {
+    clearInterval(refreshTimer)
+    refreshTimer = null
   }
 })
 </script>
