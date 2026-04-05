@@ -30,6 +30,10 @@
                 <el-icon><Brush /></el-icon>
                 <span>外观设置</span>
               </el-menu-item>
+              <el-menu-item index="hotkeys">
+                <el-icon><Grid /></el-icon>
+                <span>快捷键</span>
+              </el-menu-item>
               <el-menu-item index="analysis">
                 <el-icon><TrendCharts /></el-icon>
                 <span>分析偏好</span>
@@ -144,12 +148,81 @@
               />
             </el-form-item>
 
+            <el-divider content-position="left">主题色配置</el-divider>
+            
+            <el-form-item label="主题色">
+              <div class="color-config">
+                <div class="color-presets">
+                  <el-tag
+                    v-for="preset in colorPresets"
+                    :key="preset.name"
+                    :color="preset.primary"
+                    :class="['color-preset-tag', { active: appearanceSettings.primaryColor === preset.primary }]"
+                    @click="applyColorPreset(preset)"
+                    style="cursor: pointer; margin-right: 8px;"
+                  >
+                    {{ preset.name }}
+                  </el-tag>
+                </div>
+                <div class="color-custom">
+                  <el-color-picker 
+                    v-model="appearanceSettings.primaryColor"
+                    @change="handlePrimaryColorChange"
+                    show-alpha
+                  />
+                  <span class="color-hint">自定义主题色</span>
+                </div>
+              </div>
+            </el-form-item>
+
+            <el-form-item label="状态色">
+              <div class="status-colors">
+                <div class="status-color-item">
+                  <span class="color-label">成功</span>
+                  <el-color-picker v-model="appearanceSettings.successColor" size="small" />
+                </div>
+                <div class="status-color-item">
+                  <span class="color-label">警告</span>
+                  <el-color-picker v-model="appearanceSettings.warningColor" size="small" />
+                </div>
+                <div class="status-color-item">
+                  <span class="color-label">危险</span>
+                  <el-color-picker v-model="appearanceSettings.dangerColor" size="small" />
+                </div>
+                <div class="status-color-item">
+                  <span class="color-label">信息</span>
+                  <el-color-picker v-model="appearanceSettings.infoColor" size="small" />
+                </div>
+              </div>
+            </el-form-item>
+
+            <el-divider content-position="left">快捷键设置</el-divider>
+            
+            <el-form-item label="启用快捷键">
+              <el-switch v-model="appearanceSettings.hotkeysEnabled" />
+              <span class="setting-hint">使用键盘快捷键快速导航和操作</span>
+            </el-form-item>
+
+            <el-form-item label="显示快捷键提示">
+              <el-switch v-model="appearanceSettings.hotkeyHints" />
+              <span class="setting-hint">执行快捷键时显示操作提示</span>
+            </el-form-item>
+
             <el-form-item>
               <el-button type="primary" @click="saveAppearanceSettings">
                 保存设置
               </el-button>
             </el-form-item>
           </el-form>
+        </el-card>
+
+        <!-- 快捷键设置 -->
+        <el-card v-show="activeTab === 'hotkeys'" class="settings-content" shadow="never">
+          <template #header>
+            <h3>快捷键设置</h3>
+          </template>
+          
+          <HotkeySettings />
         </el-card>
 
         <!-- 分析偏好 -->
@@ -202,6 +275,52 @@
                 :disabled="!analysisSettings.autoRefresh"
               />
               <span class="setting-description">秒</span>
+            </el-form-item>
+            
+            <el-divider content-position="left">图表默认配置</el-divider>
+            
+            <el-form-item label="显示成交量">
+              <el-switch v-model="analysisSettings.chartShowVolume" />
+              <span class="setting-description">K线图默认显示成交量</span>
+            </el-form-item>
+            
+            <el-form-item label="显示均线">
+              <el-switch v-model="analysisSettings.chartShowMA" />
+              <span class="setting-description">K线图默认显示均线</span>
+            </el-form-item>
+            
+            <el-form-item label="均线周期">
+              <el-input
+                v-model="analysisSettings.chartMAPeriods"
+                placeholder="如: 5,10,20,60"
+                :disabled="!analysisSettings.chartShowMA"
+              />
+              <span class="setting-description">用逗号分隔多个周期</span>
+            </el-form-item>
+            
+            <el-form-item label="默认时间范围">
+              <el-select v-model="analysisSettings.chartDefaultTimeRange" style="width: 150px;">
+                <el-option
+                  v-for="opt in timeRangeOptions"
+                  :key="opt.value"
+                  :label="opt.label"
+                  :value="opt.value"
+                />
+              </el-select>
+            </el-form-item>
+            
+            <el-form-item label="显示网格线">
+              <el-switch v-model="analysisSettings.chartShowGrid" />
+            </el-form-item>
+            
+            <el-form-item label="动画时长">
+              <el-input-number
+                v-model="analysisSettings.chartAnimationDuration"
+                :min="0"
+                :max="1000"
+                :step="50"
+              />
+              <span class="setting-description">毫秒 (0表示禁用动画)</span>
             </el-form-item>
             
             <el-form-item>
@@ -539,16 +658,52 @@ const generalSettings = ref({
 
 const appearanceSettings = ref({
   theme: authStore.user?.preferences?.ui_theme || 'light',
-  sidebarWidth: authStore.user?.preferences?.sidebar_width || 240
+  sidebarWidth: authStore.user?.preferences?.sidebar_width || 240,
+  // 主题色配置
+  primaryColor: '#409EFF',
+  successColor: '#67C23A',
+  warningColor: '#E6A23C',
+  dangerColor: '#F56C6C',
+  infoColor: '#909399',
+  // 快捷键设置
+  hotkeysEnabled: true,
+  hotkeyHints: true
 })
+
+// 预设主题色
+const colorPresets = [
+  { name: '默认蓝', primary: '#409EFF' },
+  { name: '极客紫', primary: '#722ed1' },
+  { name: '活力橙', primary: '#fa8c16' },
+  { name: '清新绿', primary: '#52c41a' },
+  { name: '优雅青', primary: '#13c2c2' },
+  { name: '商务灰', primary: '#595959' }
+]
 
 const analysisSettings = ref({
   defaultMarket: authStore.user?.preferences?.default_market || 'A股',
   defaultDepth: authStore.user?.preferences?.default_depth || '3',
   defaultAnalysts: authStore.user?.preferences?.default_analysts || ['市场分析师', '基本面分析师'],
   autoRefresh: authStore.user?.preferences?.auto_refresh ?? true,
-  refreshInterval: authStore.user?.preferences?.refresh_interval || 30
+  refreshInterval: authStore.user?.preferences?.refresh_interval || 30,
+  // 图表默认配置
+  chartShowVolume: true,
+  chartShowMA: true,
+  chartMAPeriods: '5,10,20,60',
+  chartDefaultTimeRange: '1M',
+  chartShowGrid: true,
+  chartAnimationDuration: 300
 })
+
+// 时间范围选项
+const timeRangeOptions = [
+  { label: '1周', value: '1W' },
+  { label: '1月', value: '1M' },
+  { label: '3月', value: '3M' },
+  { label: '6月', value: '6M' },
+  { label: '1年', value: '1Y' },
+  { label: '全部', value: 'ALL' }
+]
 
 const notificationSettings = ref({
   desktop: authStore.user?.preferences?.desktop_notifications ?? true,
@@ -591,6 +746,22 @@ const handleThemeChange = (theme: string) => {
   appStore.setTheme(theme as any)
 }
 
+// 应用颜色预设
+const applyColorPreset = (preset: { name: string; primary: string }) => {
+  appearanceSettings.value.primaryColor = preset.primary
+  handlePrimaryColorChange(preset.primary)
+}
+
+// 处理主题色变更
+const handlePrimaryColorChange = (color: string) => {
+  appStore.applyPrimaryColor(color)
+}
+
+// 处理状态色变更
+const handleStatusColorChange = () => {
+  appStore.applyThemeColors()
+}
+
 const saveGeneralSettings = async () => {
   try {
     // 调用 authStore 更新用户信息
@@ -615,12 +786,24 @@ const saveAppearanceSettings = async () => {
     // 更新本地 store（立即生效）
     appStore.setSidebarWidth(appearanceSettings.value.sidebarWidth)
     appStore.setTheme(appearanceSettings.value.theme as any)
+    
+    // 保存主题色配置
+    appStore.preferences.primaryColor = appearanceSettings.value.primaryColor
+    appStore.preferences.successColor = appearanceSettings.value.successColor
+    appStore.preferences.warningColor = appearanceSettings.value.warningColor
+    appStore.preferences.dangerColor = appearanceSettings.value.dangerColor
+    appStore.preferences.infoColor = appearanceSettings.value.infoColor
+    appStore.preferences.hotkeysEnabled = appearanceSettings.value.hotkeysEnabled
+    appStore.preferences.hotkeyHints = appearanceSettings.value.hotkeyHints
+    appStore.applyThemeColors()
 
     // 保存到后端
     const success = await authStore.updateUserInfo({
       preferences: {
         ui_theme: appearanceSettings.value.theme,
-        sidebar_width: appearanceSettings.value.sidebarWidth
+        sidebar_width: appearanceSettings.value.sidebarWidth,
+        primary_color: appearanceSettings.value.primaryColor,
+        hotkeys_enabled: appearanceSettings.value.hotkeysEnabled
       }
     })
 
@@ -650,9 +833,26 @@ const saveAnalysisSettings = async () => {
         default_depth: analysisSettings.value.defaultDepth,
         default_analysts: analysisSettings.value.defaultAnalysts,
         auto_refresh: analysisSettings.value.autoRefresh,
-        refresh_interval: analysisSettings.value.refreshInterval
+        refresh_interval: analysisSettings.value.refreshInterval,
+        // 图表配置
+        chart_show_volume: analysisSettings.value.chartShowVolume,
+        chart_show_ma: analysisSettings.value.chartShowMA,
+        chart_ma_periods: analysisSettings.value.chartMAPeriods,
+        chart_default_time_range: analysisSettings.value.chartDefaultTimeRange,
+        chart_show_grid: analysisSettings.value.chartShowGrid,
+        chart_animation_duration: analysisSettings.value.chartAnimationDuration
       }
     })
+
+    // 同时保存到 app store
+    appStore.preferences.chartDefaults = {
+      showVolume: analysisSettings.value.chartShowVolume,
+      showMA: analysisSettings.value.chartShowMA,
+      maPeriods: analysisSettings.value.chartMAPeriods.split(',').map(p => parseInt(p.trim())).filter(p => !isNaN(p)),
+      defaultTimeRange: analysisSettings.value.chartDefaultTimeRange,
+      showGrid: analysisSettings.value.chartShowGrid,
+      animationDuration: analysisSettings.value.chartAnimationDuration
+    }
 
     if (success) {
       ElMessage.success('分析偏好已保存')
@@ -826,6 +1026,68 @@ onMounted(() => {
       margin-left: 8px;
       font-size: 12px;
       color: var(--el-text-color-placeholder);
+    }
+    
+    .setting-hint {
+      margin-left: 12px;
+      font-size: 12px;
+      color: var(--el-text-color-placeholder);
+    }
+    
+    .color-config {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      
+      .color-presets {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        
+        .color-preset-tag {
+          color: #fff;
+          border: 2px solid transparent;
+          transition: all 0.2s;
+          
+          &.active {
+            border-color: var(--el-color-primary);
+            box-shadow: 0 0 8px rgba(64, 158, 255, 0.4);
+          }
+          
+          &:hover {
+            transform: scale(1.05);
+          }
+        }
+      }
+      
+      .color-custom {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        
+        .color-hint {
+          font-size: 13px;
+          color: var(--el-text-color-regular);
+        }
+      }
+    }
+    
+    .status-colors {
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+      
+      .status-color-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        
+        .color-label {
+          font-size: 13px;
+          color: var(--el-text-color-regular);
+          min-width: 32px;
+        }
+      }
     }
 
     .about-content {

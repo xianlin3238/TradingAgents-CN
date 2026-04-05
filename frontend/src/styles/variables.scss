@@ -15,6 +15,7 @@ $color-primary-300: #93C5FD;      // 主色最亮
 $color-primary-700: #1D4ED8;      // 主色深
 $color-primary-800: #1E40AF;      // 主色更深
 $color-primary-900: #1E3A8A;      // 主色最深
+$color-primary-950: #0F172A;      // 主色极致深
 
 // 涨跌颜色 - 符合中国股市习惯
 $color-up: #10B981;               // 涨 - 绿色
@@ -35,6 +36,7 @@ $text-primary: #F1F5F9;           // 主文字
 $text-secondary: #94A3B8;         // 次文字
 $text-disabled: #64748B;          // 禁用文字
 $text-placeholder: #475569;       // 占位符
+$text-primary-inverse: #0F172A;   // 反色文字（用于浅色背景）
 
 // 边框颜色
 $border-default: #334155;
@@ -45,6 +47,7 @@ $border-lighter: #1E293B;
 $color-success: #10B981;
 $color-warning: #F59E0B;
 $color-danger: #EF4444;
+$color-error: #EF4444;          // 别名，与 danger 相同
 $color-info: #3B82F6;
 
 // 图表专用颜色
@@ -117,6 +120,9 @@ $radius-full: 9999px;
 // 卡片阴影
 $shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
 $shadow-card-hover: 0 10px 40px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
+$shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+$shadow-md: 0 4px 12px rgba(0, 0, 0, 0.3);
+$shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.4), 0 4px 12px rgba(0, 0, 0, 0.3);
 
 // 悬浮阴影
 $shadow-dropdown: 0 4px 16px rgba(0, 0, 0, 0.4);

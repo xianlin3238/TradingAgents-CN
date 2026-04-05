@@ -1,4 +1,50 @@
 import { defineStore } from 'pinia'
+
+// 颜色处理辅助函数
+function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  return result ? {
+    r: parseInt(result[1], 16),
+    g: parseInt(result[2], 16),
+    b: parseInt(result[3], 16)
+  } : null
+}
+
+function rgbToHex(r: number, g: number, b: number): string {
+  return '#' + [r, g, b].map(x => {
+    const hex = Math.round(x).toString(16)
+    return hex.length === 1 ? '0' + hex : hex
+  }).join('')
+}
+
+// 调整颜色亮度（用于生成 light-3/5/7/8/9）
+function adjustColorBrightness(hex: string, level: number): string {
+  const rgb = hexToRgb(hex)
+  if (!rgb) return hex
+  
+  // level: 3, 5, 7, 8, 9 对应不同亮度
+  const factors: Record<number, number> = { 3: 0.1, 5: 0.2, 7: 0.35, 8: 0.5, 9: 0.7 }
+  const factor = factors[level] || 0.5
+  
+  const r = Math.round(rgb.r + (255 - rgb.r) * factor)
+  const g = Math.round(rgb.g + (255 - rgb.g) * factor)
+  const b = Math.round(rgb.b + (255 - rgb.b) * factor)
+  
+  return rgbToHex(r, g, b)
+}
+
+// 加深颜色（用于 dark-2）
+function darkenColor(hex: string, percent: number): string {
+  const rgb = hexToRgb(hex)
+  if (!rgb) return hex
+  
+  const factor = 1 - percent / 100
+  const r = Math.round(rgb.r * factor)
+  const g = Math.round(rgb.g * factor)
+  const b = Math.round(rgb.b * factor)
+  
+  return rgbToHex(r, g, b)
+}
 import type { RouteLocationNormalized } from 'vue-router'
 import { useStorage } from '@vueuse/core'
 
@@ -28,6 +74,24 @@ export interface AppState {
     autoRefresh: boolean
     refreshInterval: number
     showWelcome: boolean
+    // 主题色配置
+    primaryColor: string
+    successColor: string
+    warningColor: string
+    dangerColor: string
+    infoColor: string
+    // 图表默认配置
+    chartDefaults: {
+      showVolume: boolean
+      showMA: boolean
+      maPeriods: number[]
+      defaultTimeRange: string
+      showGrid: boolean
+      animationDuration: number
+    }
+    // 快捷键配置
+    hotkeysEnabled: boolean
+    hotkeyHints: boolean
   }
 
   // 系统信息
@@ -57,13 +121,46 @@ export const useAppStore = defineStore('app', {
       defaultDepth: '3',  // 3级为标准分析（推荐）
       autoRefresh: true,
       refreshInterval: 30,
-      showWelcome: true
+      showWelcome: true,
+      // 主题色配置 - 默认使用 Element Plus 默认色
+      primaryColor: '#409EFF',
+      successColor: '#67C23A',
+      warningColor: '#E6A23C',
+      dangerColor: '#F56C6C',
+      infoColor: '#909399',
+      // 图表默认配置
+      chartDefaults: {
+        showVolume: true,
+        showMA: true,
+        maPeriods: [5, 10, 20, 60],
+        defaultTimeRange: '1M',
+        showGrid: true,
+        animationDuration: 300
+      },
+      // 快捷键配置
+      hotkeysEnabled: true,
+      hotkeyHints: true
     }).value || {
       defaultMarket: 'A股',
       defaultDepth: '3',  // 3级为标准分析（推荐）
       autoRefresh: true,
       refreshInterval: 30,
-      showWelcome: true
+      showWelcome: true,
+      primaryColor: '#409EFF',
+      successColor: '#67C23A',
+      warningColor: '#E6A23C',
+      dangerColor: '#F56C6C',
+      infoColor: '#909399',
+      chartDefaults: {
+        showVolume: true,
+        showMA: true,
+        maPeriods: [5, 10, 20, 60],
+        defaultTimeRange: '1M',
+        showGrid: true,
+        animationDuration: 300
+      },
+      hotkeysEnabled: true,
+      hotkeyHints: true
     },
 
     version: '0.1.16',
@@ -181,15 +278,61 @@ export const useAppStore = defineStore('app', {
       localStorage.setItem('user-preferences', JSON.stringify(this.preferences))
     },
     
+    // 应用主题色
+    applyPrimaryColor(color: string) {
+      document.documentElement.style.setProperty('--el-color-primary', color)
+      // 生成色阶
+      const shades = [3, 5, 7, 8, 9]
+      shades.forEach(shade => {
+        const shadeColor = adjustColorBrightness(color, shade)
+        document.documentElement.style.setProperty(`--el-color-primary-light-${shade}`, shadeColor)
+      })
+      document.documentElement.style.setProperty('--el-color-primary-dark-2', darkenColor(color, 20))
+      localStorage.setItem('app-primary-color', color)
+    },
+    
+    // 应用所有主题色
+    applyThemeColors() {
+      const colors = {
+        primary: this.preferences.primaryColor,
+        success: this.preferences.successColor,
+        warning: this.preferences.warningColor,
+        danger: this.preferences.dangerColor,
+        info: this.preferences.infoColor
+      }
+      
+      Object.entries(colors).forEach(([name, color]) => {
+        document.documentElement.style.setProperty(`--el-color-${name}`, color)
+      })
+      
+      localStorage.setItem('theme-colors', JSON.stringify(colors))
+    },
+    
     // 重置偏好设置
     resetPreferences() {
       this.preferences = {
         defaultMarket: 'A股',
-        defaultDepth: '标准',
+        defaultDepth: '3',
         autoRefresh: true,
         refreshInterval: 30,
-        showWelcome: true
+        showWelcome: true,
+        primaryColor: '#409EFF',
+        successColor: '#67C23A',
+        warningColor: '#E6A23C',
+        dangerColor: '#F56C6C',
+        infoColor: '#909399',
+        chartDefaults: {
+          showVolume: true,
+          showMA: true,
+          maPeriods: [5, 10, 20, 60],
+          defaultTimeRange: '1M',
+          showGrid: true,
+          animationDuration: 300
+        },
+        hotkeysEnabled: true,
+        hotkeyHints: true
       }
+      this.applyThemeColors()
     },
     
     // 设置网络状态
