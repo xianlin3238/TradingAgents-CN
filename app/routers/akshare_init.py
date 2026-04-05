@@ -18,7 +18,7 @@ from app.utils.timezone import now_tz
 
 logger = logging.getLogger(__name__)
 
-router = APIRouter(prefix="/api/akshare-init", tags=["AKShare初始化"])
+router = APIRouter(prefix="/akshare-init", tags=["AKShare初始化"])
 
 # 全局任务状态存储
 _initialization_status = {

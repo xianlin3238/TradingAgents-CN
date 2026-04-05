@@ -27,6 +27,16 @@ class Settings(BaseSettings):
     ALLOWED_ORIGINS: List[str] = Field(default_factory=lambda: ["*"])
     ALLOWED_HOSTS: List[str] = Field(default_factory=lambda: ["*"])
 
+    # 数据库开关
+    MONGODB_ENABLED: bool = Field(default=True)
+    REDIS_ENABLED: bool = Field(default=True)
+
+    def model_post_init(self, __context):
+        """初始化后自动设置环境变量，确保 os.getenv 能读取到正确的值"""
+        import os
+        os.environ['MONGODB_ENABLED'] = str(self.MONGODB_ENABLED).lower()
+        os.environ['REDIS_ENABLED'] = str(self.REDIS_ENABLED).lower()
+
     # MongoDB配置
     MONGODB_HOST: str = Field(default="localhost")
     MONGODB_PORT: int = Field(default=27017)
@@ -285,6 +295,10 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
 
 settings = Settings()
+
+# 导出数据库开关到环境变量 (供 init_database 使用)
+os.environ['MONGODB_ENABLED'] = str(settings.MONGODB_ENABLED).lower()
+os.environ['REDIS_ENABLED'] = str(settings.REDIS_ENABLED).lower()
 
 # 自动将代理配置设置到环境变量
 # 这样 requests 库可以直接读取 os.environ['NO_PROXY']

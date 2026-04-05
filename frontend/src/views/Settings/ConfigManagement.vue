@@ -146,13 +146,22 @@
                   </div>
                 </template>
               </el-table-column>
-              <el-table-column label="操作" width="280" fixed="right">
+              <el-table-column label="操作" width="350" fixed="right">
                 <template #default="{ row }">
                   <el-button
                     size="small"
                     @click.stop="editProvider(row)"
                   >
                     编辑
+                  </el-button>
+                  <el-button
+                    v-if="row.extra_config?.has_api_key"
+                    size="small"
+                    type="primary"
+                    @click.stop="fetchProviderModels(row)"
+                    :loading="fetchingModels[row.id]"
+                  >
+                    获取模型
                   </el-button>
                   <el-button
                     v-if="row.extra_config?.has_api_key"
@@ -330,7 +339,7 @@
                   </el-table-column>
 
                   <!-- 操作 -->
-                  <el-table-column label="操作" width="260" fixed="right">
+                  <el-table-column label="操作" width="320" fixed="right">
                     <template #default="{ row }">
                       <el-button size="small" @click="editLLMConfig(row)">
                         编辑
@@ -341,6 +350,14 @@
                         @click="testLLMConfig(row)"
                       >
                         测试
+                      </el-button>
+                      <el-button
+                        size="small"
+                        :type="defaultLLM === row.model_name ? 'info' : 'success'"
+                        :disabled="defaultLLM === row.model_name"
+                        @click="setDefaultLLM(row.model_name)"
+                      >
+                        {{ defaultLLM === row.model_name ? '当前默认' : '设为默认' }}
                       </el-button>
                       <el-button
                         size="small"
@@ -1176,6 +1193,7 @@ const currentDatabaseConfig = ref<Partial<DatabaseConfig>>({
 
 // 测试状态
 const testingProviders = ref<Record<string, boolean>>({})
+const fetchingModels = ref<Record<string, boolean>>({})
 
 // 方法
 const handleMenuSelect = (index: string) => {
@@ -1687,6 +1705,30 @@ const testProviderAPI = async (provider: LLMProvider) => {
     ElMessage.error(`${provider.display_name} API测试失败`)
   } finally {
     testingProviders.value[provider.id] = false
+  }
+}
+
+// 从厂家API获取模型列表
+const fetchProviderModels = async (provider: LLMProvider) => {
+  if (!provider.id) return
+  
+  fetchingModels.value[provider.id] = true
+  
+  try {
+    const result = await configApi.fetchProviderModels(provider.id)
+    
+    if (result.success) {
+      ElMessage.success(`成功从 ${provider.display_name} 获取 ${result.models?.length || 0} 个模型`)
+      // 刷新模型列表
+      await loadLLMConfigs()
+    } else {
+      ElMessage.error(`获取模型失败: ${result.message}`)
+    }
+  } catch (error) {
+    console.error('获取模型失败:', error)
+    ElMessage.error(`${provider.display_name} 获取模型失败`)
+  } finally {
+    fetchingModels.value[provider.id] = false
   }
 }
 

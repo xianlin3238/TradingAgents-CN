@@ -1,6 +1,6 @@
 import axios from 'axios'
 import type { AxiosInstance, AxiosRequestConfig, AxiosResponse } from 'axios'
-import { ElMessage, ElMessageBox } from 'element-plus'
+import { ElMessage } from 'element-plus'
 import { useAuthStore } from '@/stores/auth'
 import { useAppStore } from '@/stores/app'
 import router from '@/router'
@@ -464,12 +464,12 @@ export const testApiConnection = async (): Promise<boolean> => {
     console.log('🔍 [API_TEST] 基础URL:', import.meta.env.VITE_API_BASE_URL || '使用代理')
     console.log('🔍 [API_TEST] 代理目标:', 'http://localhost:8000 (根据vite.config.ts)')
 
+    // 直接使用 request，它返回 AxiosResponse
     const response = await request.get('/api/health', {
-      timeout: 5000,
-      skipErrorHandler: true
+      timeout: 5000
     })
 
-    console.log('🔍 [API_TEST] 健康检查成功:', response.data)
+    console.log('🔍 [API_TEST] 健康检查成功:', response)
     return true
   } catch (error: any) {
     console.error('🔍 [API_TEST] 健康检查失败:', error)
@@ -490,53 +490,53 @@ export const testApiConnection = async (): Promise<boolean> => {
 
 // 请求方法封装
 export class ApiClient {
-  // GET请求
+  // GET请求 - 返回业务数据 T（成功时 data 字段）
   static async get<T = any>(
     url: string,
-    params?: any,
+    params?: Record<string, unknown>,
     config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
-    // 响应拦截器已经返回 response.data，所以这里直接返回
-    return await request.get(url, { params, ...config })
+  ): Promise<T> {
+    const res = await request.get(url, { params, ...config }) as ApiResponse<T>
+    return res.data
   }
 
-  // POST请求
+  // POST请求 - 返回业务数据 T
   static async post<T = any>(
     url: string,
     data?: any,
     config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
-    // 响应拦截器已经返回 response.data，所以这里直接返回
-    return await request.post(url, data, config)
+  ): Promise<T> {
+    const res = await request.post(url, data, config) as ApiResponse<T>
+    return res.data
   }
 
-  // PUT请求
+  // PUT请求 - 返回业务数据 T
   static async put<T = any>(
     url: string,
     data?: any,
     config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
-    // 响应拦截器已经返回 response.data，所以这里直接返回
-    return await request.put(url, data, config)
+  ): Promise<T> {
+    const res = await request.put(url, data, config) as ApiResponse<T>
+    return res.data
   }
 
-  // DELETE请求
+  // DELETE请求 - 返回业务数据 T
   static async delete<T = any>(
     url: string,
     config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
-    // 响应拦截器已经返回 response.data，所以这里直接返回
-    return await request.delete(url, config)
+  ): Promise<T> {
+    const res = await request.delete(url, config) as ApiResponse<T>
+    return res.data
   }
 
-  // PATCH请求
+  // PATCH请求 - 返回业务数据 T
   static async patch<T = any>(
     url: string,
     data?: any,
     config?: RequestConfig
-  ): Promise<ApiResponse<T>> {
-    // 响应拦截器已经返回 response.data，所以这里直接返回
-    return await request.patch(url, data, config)
+  ): Promise<T> {
+    const res = await request.patch(url, data, config) as ApiResponse<T>
+    return res.data
   }
 
   // 上传文件
@@ -574,9 +574,9 @@ export class ApiClient {
     const blobData = await request.get(url, {
       responseType: 'blob',
       ...config
-    })
+    }) as unknown as Blob
 
-    const blob = new Blob([blobData])
+    const blob = blobData instanceof Blob ? blobData : new Blob([blobData as BlobPart])
     const downloadUrl = window.URL.createObjectURL(blob)
     const link = document.createElement('a')
     link.href = downloadUrl

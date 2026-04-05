@@ -221,7 +221,7 @@ export const getActionTypeName = (actionType: string): string => {
   return ActionTypeNames[actionType as keyof typeof ActionTypeNames] || actionType
 }
 
-export const getActionTypeTagColor = (actionType: string): string => {
+export const getActionTypeTagColor = (actionType: string): '' | 'success' | 'warning' | 'danger' | 'info' | 'primary' => {
   return ActionTypeTagColors[actionType as keyof typeof ActionTypeTagColors] || 'info'
 }
 

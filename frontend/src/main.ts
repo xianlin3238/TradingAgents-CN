@@ -48,13 +48,12 @@ app.use(ElementPlus, {
 setupGlobalComponents(app)
 
 // 全局错误处理
-app.config.errorHandler = (err, vm, info) => {
+app.config.errorHandler = (err, _vm, info) => {
   console.error('全局错误:', err, info)
 
   // 检查是否是认证错误
   if (err && typeof err === 'object') {
     const error = err as any
-    // 检查错误消息或状态码
     if (
       error.message?.includes('认证失败') ||
       error.message?.includes('登录已过期') ||
@@ -124,11 +123,14 @@ const initApp = async () => {
     } else {
       console.log('⚠️ API连接失败，跳过认证检查')
     }
-  } catch (error) {
+  } catch (error: unknown) {
     console.warn('⚠️ 应用初始化失败，但应用将继续启动:', error)
     // 如果是网络错误，不影响应用启动
-    if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-      console.log('📱 离线模式：应用将在没有后端连接的情况下启动')
+    if (error instanceof Error) {
+      const axiosError = error as any
+      if (axiosError.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        console.log('📱 离线模式：应用将在没有后端连接的情况下启动')
+      }
     }
   } finally {
     // 无论认证状态如何，都挂载应用

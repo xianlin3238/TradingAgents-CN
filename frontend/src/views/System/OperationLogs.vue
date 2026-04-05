@@ -329,7 +329,7 @@ import {
 // 响应式数据
 const loading = ref(false)
 const detailDialogVisible = ref(false)
-const selectedLog = ref(null)
+const selectedLog = ref<OperationLog | null>(null)
 const currentPage = ref(1)
 const pageSize = ref(20)
 const totalLogs = ref(0)
@@ -361,7 +361,7 @@ const logs = ref<OperationLog[]>([])
 const statsData = ref<OperationLogStats | null>(null)
 
 // 方法
-const getActionTypeTag = (actionType: string): string => {
+const getActionTypeTag = (actionType: string): '' | 'success' | 'warning' | 'danger' | 'info' | 'primary' => {
   return getActionTypeTagColor(actionType)
 }
 

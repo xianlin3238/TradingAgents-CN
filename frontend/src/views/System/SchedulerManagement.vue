@@ -709,9 +709,9 @@ const loadJobs = async () => {
   loading.value = true
   try {
     const [jobsRes, statsRes] = await Promise.all([getJobs(), getSchedulerStats()])
-    // ApiClient.get 返回 ApiResponse<T>，其中 data 字段就是我们需要的数据
-    jobs.value = Array.isArray(jobsRes.data) ? jobsRes.data : []
-    stats.value = statsRes.data || null
+    // ApiClient 直接返回业务数据
+    jobs.value = Array.isArray(jobsRes) ? jobsRes : []
+    stats.value = statsRes || null
   } catch (error: any) {
     ElMessage.error(error.message || '加载任务列表失败')
     jobs.value = []
@@ -863,7 +863,7 @@ const handleHistoryPageChange = (page: number) => {
   loadHistory()
 }
 
-const handleHistoryTabChange = (tabName: string) => {
+const handleHistoryTabChange = (tabName: string | number) => {
   if (tabName === 'execution') {
     executionPage.value = 1
     loadExecutions()
@@ -994,7 +994,9 @@ const formatTrigger = (trigger: string) => {
   return trigger
 }
 
-const formatAction = (action: string) => {
+// 格式化操作类型（保留用于将来扩展）
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+const formatAction = (action: string): string => {
   const actionMap: Record<string, string> = {
     pause: '暂停',
     resume: '恢复',

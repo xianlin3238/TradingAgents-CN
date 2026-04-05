@@ -80,14 +80,12 @@ export interface ConnectionTestResult {
 export const databaseApi = {
   // 获取数据库状态
   async getStatus(): Promise<DatabaseStatus> {
-    const response = await ApiClient.get<DatabaseStatus>('/api/system/database/status')
-    return response.data
+    return ApiClient.get<DatabaseStatus>('/api/system/database/status')
   },
 
   // 获取数据库统计
   async getStats(): Promise<DatabaseStats> {
-    const response = await ApiClient.get<DatabaseStats>('/api/system/database/stats')
-    return response.data
+    return ApiClient.get<DatabaseStats>('/api/system/database/stats')
   },
 
   // 测试数据库连接

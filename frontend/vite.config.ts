@@ -4,6 +4,7 @@ import { resolve } from 'path'
 import AutoImport from 'unplugin-auto-import/vite'
 import Components from 'unplugin-vue-components/vite'
 import { ElementPlusResolver } from 'unplugin-vue-components/resolvers'
+import viteCompression from 'vite-plugin-compression'
 
 // https://vitejs.dev/config/
 export default defineConfig({
@@ -26,6 +27,14 @@ export default defineConfig({
     Components({
       resolvers: [ElementPlusResolver()],
       dts: true
+    }),
+    // Gzip 压缩
+    viteCompression({
+      verbose: true,
+      disable: false,
+      threshold: 10240, // 大于 10KB 才压缩
+      algorithm: 'gzip',
+      ext: '.gz'
     })
   ],
   resolve: {
@@ -63,13 +72,24 @@ export default defineConfig({
     outDir: 'dist',
     assetsDir: 'assets',
     sourcemap: false,
+    // 使用 esbuild 压缩（Vite 默认，更快更稳定）
+    minify: 'esbuild',
     rollupOptions: {
       output: {
         chunkFileNames: 'js/[name]-[hash].js',
         entryFileNames: 'js/[name]-[hash].js',
-        assetFileNames: '[ext]/[name]-[hash].[ext]'
+        assetFileNames: '[ext]/[name]-[hash].[ext]',
+        // 分包策略：将第三方库分离
+        manualChunks: {
+          'vue-vendor': ['vue', 'vue-router', 'pinia'],
+          'element-plus': ['element-plus', '@element-plus/icons-vue'],
+          'echarts': ['echarts', 'vue-echarts'],
+          'utils': ['dayjs', 'axios', '@vueuse/core']
+        }
       }
-    }
+    },
+    // 提高 chunk 大小警告阈值
+    chunkSizeWarningLimit: 1000
   },
   css: {
     preprocessorOptions: {

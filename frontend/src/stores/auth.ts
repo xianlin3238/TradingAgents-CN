@@ -192,29 +192,25 @@ export const useAuthStore = defineStore('auth', {
 
         const response = await authApi.login(loginForm)
 
-        if (response.success) {
-          const { access_token, refresh_token, user } = response.data
+        // authApi.login 直接返回 LoginResponse
+        const { access_token, refresh_token, user } = response
 
-          // 设置认证信息
-          this.setAuthInfo(access_token, refresh_token, user)
+        // 设置认证信息
+        this.setAuthInfo(access_token, refresh_token, user)
 
-          // 开源版admin用户拥有所有权限
-          this.permissions = ['*']
-          this.roles = ['admin']
+        // 开源版admin用户拥有所有权限
+        this.permissions = ['*']
+        this.roles = ['admin']
 
-          // 同步用户偏好设置到 appStore
-          this.syncUserPreferencesToAppStore()
+        // 同步用户偏好设置到 appStore
+        this.syncUserPreferencesToAppStore()
 
-          // 启动 token 自动刷新定时器
-          const { setupTokenRefreshTimer } = await import('@/utils/auth')
-          setupTokenRefreshTimer()
+        // 启动 token 自动刷新定时器
+        const { setupTokenRefreshTimer } = await import('@/utils/auth')
+        setupTokenRefreshTimer()
 
-          // 不在这里显示成功消息，由调用方显示
-          return true
-        } else {
-          // 不在这里显示错误消息，由调用方显示
-          return false
-        }
+        // 不在这里显示成功消息，由调用方显示
+        return true
       } catch (error: any) {
         console.error('登录失败:', error)
         // 不在这里显示错误消息，由调用方显示

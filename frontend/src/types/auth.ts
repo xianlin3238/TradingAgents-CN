@@ -22,6 +22,10 @@ export interface User {
   total_analyses: number
   successful_analyses: number
   failed_analyses: number
+  
+  // 权限和角色
+  permissions?: string[]
+  roles?: string[]
 }
 
 // 用户偏好设置

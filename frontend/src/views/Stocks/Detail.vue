@@ -202,14 +202,14 @@
               <!-- 报告列表预览 -->
               <div class="reports-preview">
                 <el-tag
-                  v-for="(content, key) in lastAnalysis.reports"
+                  v-for="(_content, key) in lastAnalysis.reports"
                   :key="key"
                   size="small"
                   effect="plain"
                   class="report-tag"
-                  @click="openReport(key)"
+                  @click="openReport(String(key))"
                 >
-                  {{ formatReportName(key) }}
+                  {{ formatReportName(String(key)) }}
                 </el-tag>
               </div>
             </div>
@@ -404,7 +404,7 @@ const router = useRouter()
 const analysisStatus = ref<'idle' | 'running' | 'completed' | 'failed'>('idle')
 const analysisProgress = ref(0)
 const analysisMessage = ref('')
-const currentTaskId = ref<string | null>(null)
+const currentTaskId = ref<string | null>(null)  // 保留用于将来任务跟踪
 const lastAnalysis = ref<any | null>(null)
 const lastTaskInfo = ref<any | null>(null) // 保存任务信息（包含 end_time 等）
 
@@ -412,15 +412,16 @@ const lastTaskInfo = ref<any | null>(null) // 保存任务信息（包含 end_ti
 const showReportsDialog = ref(false)
 const activeReportTab = ref('')
 
-const notifStore = useNotificationStore()
+const notifStore = useNotificationStore()  // 保留用于将来通知功能
 
-const lastAnalysisTagType = computed(() => {
-  const reco = String(lastAnalysis.value?.recommendation || '').toLowerCase()
-  if (reco.includes('买') || reco.includes('buy') || reco.includes('增持') || reco.includes('强')) return 'success'
-  if (reco.includes('卖') || reco.includes('sell')) return 'danger'
-  if (reco.includes('减持') || reco.includes('谨慎')) return 'warning'
-  return 'info'
-})
+// 保留用于将来扩展
+// const lastAnalysisTagType = computed(() => {
+//   const reco = String(lastAnalysis.value?.recommendation || '').toLowerCase()
+//   if (reco.includes('买') || reco.includes('buy') || reco.includes('增持') || reco.includes('强')) return 'success'
+//   if (reco.includes('卖') || reco.includes('sell')) return 'danger'
+//   if (reco.includes('减持') || reco.includes('谨慎')) return 'warning'
+//   return 'info'
+// })
 
 // 股票代码（从路由参数获取）
 const code = computed(() => {
@@ -561,8 +562,9 @@ async function handleSync() {
       if (data.realtime_sync) {
         if (data.realtime_sync.success) {
           // 🔥 如果切换了数据源，显示提示信息
-          if (data.realtime_sync.data_source_used && data.realtime_sync.data_source_used !== syncForm.dataSource) {
-            message += `✅ 实时行情同步成功（已自动切换到 ${data.realtime_sync.data_source_used.toUpperCase()} 数据源）\n`
+          const dataSourceUsed = (data.realtime_sync as Record<string, unknown>).data_source_used
+          if (dataSourceUsed && dataSourceUsed !== syncForm.dataSource) {
+            message += `✅ 实时行情同步成功（已自动切换到 ${String(dataSourceUsed).toUpperCase()} 数据源）\n`
           } else {
             message += `✅ 实时行情同步成功\n`
           }

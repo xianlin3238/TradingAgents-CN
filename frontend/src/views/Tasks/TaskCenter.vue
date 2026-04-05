@@ -154,9 +154,10 @@ import TaskResultDialog from '@/components/Global/TaskResultDialog.vue'
 import TaskReportDialog from '@/components/Global/TaskReportDialog.vue'
 
 
+// Markdown 渲染器配置
 marked.setOptions({ breaks: true, gfm: true })
-const renderMarkdown = (s: string) => {
-  try { return marked.parse(s||'') as string } catch { return s }
+const renderMarkdown = (s: string): string => {
+  try { return marked.parse(s || '') as string } catch { return s || '' }
 }
 
 const router = useRouter()
@@ -196,7 +197,7 @@ const connectTaskWebSocket = (taskId: string) => {
   }
 
   try {
-    const token = localStorage.getItem('token') || ''
+    const _token = localStorage.getItem('token') || ''  // 用于 WebSocket 认证
     const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
     const host = window.location.host
     const wsUrl = `${wsProtocol}//${host}/api/ws/task/${taskId}`
@@ -355,8 +356,8 @@ const openResult = async (row:any) => {
   currentRow.value = row
   try {
     const res = await analysisApi.getTaskResult(row.task_id)
-    const body = (res as any)?.data?.data || {}
-    currentResult.value = body
+    // ApiClient 直接返回业务数据
+    currentResult.value = res || {}
     resultVisible.value = true
   } catch (e:any) {
     ElMessage.error('获取结果失败')
