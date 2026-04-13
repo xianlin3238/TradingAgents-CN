@@ -1,0 +1,44 @@
+name: Remove Original Project Code
+
+on:
+  workflow_dispatch:
+
+jobs:
+  delete-files:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+      
+      - name: Remove original project files
+        run: |
+          # 删除原项目目录
+          rm -rf tradingagents/ cli/
+          
+          # 删除原项目根文件
+          rm -f main.py requirements.txt requirements-lock.txt docker-compose.yml .env.example uv.lock
+          
+          # 显示删除结果
+          echo "Deleted files:"
+          git status
+      
+      - name: Commit changes
+        run: |
+          git add -A
+          git commit -m "chore: remove original TradingAgents project code
+
+- Removed tradingagents/ directory (original project core code)
+- Removed cli/ directory (original project CLI)
+- Removed original project root files: main.py, requirements.txt, etc.
+
+This project now only contains independently developed code (app/ and frontend/).
+
+License changed to proprietary for app/ and frontend/ directories."
+          git push origin HEAD:main
